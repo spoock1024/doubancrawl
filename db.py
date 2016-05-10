@@ -24,13 +24,17 @@ class DBHelper():
         pass
 
 
-    def store_data(self,activity):
+    def store_data(self,activities):
         cnx = mysql.connector.connect(**config)
         cursor = cnx.cursor()
         add_activity = ("INSERT INTO activity(eventid,title,activitytime,location,cost,info,activitytype,interestedpersonnum,interestedrate,participatepersonnum,participaterate,organizationname,organizationid,organizationurl,organizationtype,attendnum,wishnum,ownednum,groupsnum,groupsnames,followersnum) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
-        activity_data = self.__get_data(activity)
+        datas = []
+        for activity in activities:
+            activity_data = self.__get_data(activity)
+            datas.append(activity_data)
         try:
-            cursor.execute(add_activity,activity_data)
+            cursor.executemany(add_activity,datas)
+            # cursor.execute(add_activity,data)
         except mysql.connector.errors.DatabaseError as e:
             traceback.print_exc()
             with open("storedb_error.txt","a+") as file:

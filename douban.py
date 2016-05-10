@@ -8,7 +8,8 @@ from bs4 import BeautifulSoup
 
 from activity import Activity
 from db import DBHelper
-
+from gevent import monkey;monkey.patch_all()
+import gevent
 __author__ = 'Aaron'
 
 def random_header():
@@ -18,7 +19,7 @@ def random_header():
         {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:46.0) Gecko/20100101 Firefox/46.0'}]
     index = random.randint(0,2)
     return headers[index]
-
+activities = []
 class Douban():
     def __init__(self,url):
         all_event_urls = self.get_all_urls_by_date(url)
@@ -73,38 +74,49 @@ class Douban():
 
     # get the event info by event url
     def get_events_info(self,event_urls):
-        print(event_urls)
-        for url in event_urls:
-            self.get_event_info(url)
-            time.sleep(random.randint(0,5))
+        gevent.joinall([
+            gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
+            gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
+            gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
+            gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
+            gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
+        ])
 
     # parse the html,get the activity info
     def get_event_info(self,event_url):
-        response = requests.get(event_url,headers=random_header())
-        status_code = response.status_code
-        if status_code == 200:
-            event_html = response.text
-            eventsoup = BeautifulSoup(event_html,"html5lib")
-            eventid = 0
-            try:
-                eventid = int(event_url[event_url[:-1].rfind("/")+1:-1])
-            except:
-                print(event_url)
-            activity = Activity(eventsoup, eventid)
-            dbhelper = DBHelper(activity)
-            dbhelper.store_data(activity)
-            print(event_url+"，数据插入完毕")
-            # return activity
-        else:
-            f = open('error_url.txt','r+')
-            f.write(event_url+"\r\n")
-            f.close()
+        if event_url:
+            time.sleep(random.randint(0,5))
+            response = requests.get(event_url,headers=random_header())
+            status_code = response.status_code
+            if status_code == 200:
+                event_html = response.text
+                eventsoup = BeautifulSoup(event_html,"html5lib")
+                eventid = 0
+                try:
+                    eventid = int(event_url[event_url[:-1].rfind("/")+1:-1])
+                except:
+                    print(event_url)
+                try:
+                    activity = Activity(eventsoup, eventid)
+                except Exception as e:
+                    f = open('error_url.txt', 'a')
+                    f.write(event_url + "\r\n")
+                    f.close()
+                global activities
+                activities.append(activity)
+                if len(activities) == 20:
+                    dbhelper = DBHelper(activities)
+                    dbhelper.store_data(activities)
+                    print("20条数据插入完毕")
+                    activities = []
+            else:
+                f = open('error_url.txt','a')
+                f.write(event_url+"\r\n")
+                f.close()
             # return  None
 
 
 
-    def get_event_people(self,event_url):
-        pass
 
 def auto_complete_zero(half_baked_time):
     complete_time = ""
@@ -119,8 +131,8 @@ def generate_events_url_by_time():
     urls = []
     url_template = "https://www.douban.com/location/wuhan/events/{year}{month}{day}-all"
     for year in range(2008,2009):
-        for month in range(4,5):
-            for day in range(1,31):
+        for month in range(1,13):
+            for day in range(1,32):
                 url = url_template.format(year=year,month=auto_complete_zero(month),day=auto_complete_zero(day))
                 if query_activity(url):
                     urls.append(url)
@@ -139,8 +151,15 @@ def query_activity(url):
 
 
 if __name__ == "__main__":
+    start = time.clock()
     urls = generate_events_url_by_time()
+    f = open("urls.txt","w")
+    url_str = "\n".join(urls)
+    f.write(url_str)
+    f.close()
     for url in urls:
         print(url)
         douban = Douban(url)
+    end_time = time.clock()
+    print("TIme used:",str(end_time-start))
     print("Done")
