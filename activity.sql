@@ -35,7 +35,7 @@ CREATE TABLE `activity` (
   `interestedpersonnum` int(11) DEFAULT NULL COMMENT '对活动感兴趣人的数量',
   `interestedrate` text COMMENT '城市所占的比例',
   `participatepersonnum` text COMMENT '参加活动的数量',
-  `participaterate` varchar(255) DEFAULT NULL COMMENT '城市所占的比例',
+  `participaterate` text COMMENT '城市所占的比例',
   `organizationname` text COMMENT '发起人名称',
   `organizationid` int(11) DEFAULT NULL COMMENT '发起人的豆瓣id',
   `organizationurl` varchar(255) DEFAULT NULL COMMENT '发起人豆瓣地址',

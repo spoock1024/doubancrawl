@@ -87,7 +87,7 @@ class Douban():
     # parse the html,get the activity info
     def get_event_info(self,event_url):
         if event_url:
-            time.sleep(random.randint(0,5))
+            time.sleep(random.randint(0,3))
             response = requests.get(event_url,headers=random_header())
             status_code = response.status_code
             if status_code == 200:
@@ -127,12 +127,13 @@ def auto_complete_zero(half_baked_time):
 def generate_events_url_by_time():
     urls = []
     url_template = "https://www.douban.com/location/wuhan/events/{year}{month}{day}-all"
-    for year in range(2008,2009):
+    for year in range(2010,2012):
         for month in range(1,13):
             for day in range(1,32):
                 url = url_template.format(year=year,month=auto_complete_zero(month),day=auto_complete_zero(day))
-                if query_activity(url):
-                    urls.append(url)
+                # if query_activity(url):
+                #     urls.append(url)
+                urls.append(url)
     return urls
 
 def query_activity(url):
@@ -150,10 +151,6 @@ def query_activity(url):
 if __name__ == "__main__":
     start = time.clock()
     urls = generate_events_url_by_time()
-    f = open("urls.txt","w")
-    url_str = "\n".join(urls)
-    f.write(url_str)
-    f.close()
     for url in urls:
         print(url)
         douban = Douban(url)
