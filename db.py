@@ -6,8 +6,8 @@ __author__ = 'Aaron'
 import mysql.connector
 
 config = {
-    "user":"root",
-    "password":"",
+    "user":"whu",
+    "password":"123456",
     "host":"127.0.0.1",
     "database":"douban",
     "raise_on_warnings":True,
@@ -15,30 +15,21 @@ config = {
 
 class DBHelper():
 
-    def __init__(self,activities):
-        # if isinstance(activities,list):
-        #     for activity in activities:
-        #         self.store_data(activity)
-        # else:
-        #     self.store_data(activities)
+    def __init__(self):
         pass
 
 
-    def store_data(self,activities):
+    def store_data(self,activity):
         cnx = mysql.connector.connect(**config)
         cursor = cnx.cursor()
         add_activity = ("INSERT INTO activity(eventid,title,activitytime,location,cost,info,activitytype,interestedpersonnum,interestedrate,participatepersonnum,participaterate,organizationname,organizationid,organizationurl,organizationtype,attendnum,wishnum,ownednum,groupsnum,groupsnames,followersnum) VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)")
-        datas = []
-        for activity in activities:
-            activity_data = self.__get_data(activity)
-            datas.append(activity_data)
+        data = self.__get_data(activity)
         try:
-            cursor.executemany(add_activity,datas)
-            # cursor.execute(add_activity,data)
+            cursor.execute(add_activity,data)
         except mysql.connector.errors.DatabaseError as e:
             traceback.print_exc()
             with open("storedb_error.txt","a+") as file:
-                file.write(str(activity_data[0]))
+                file.write(str(activity.event_id))
                 file.write("\n")
 
         cnx.commit()

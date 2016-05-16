@@ -74,13 +74,15 @@ class Douban():
 
     # get the event info by event url
     def get_events_info(self,event_urls):
-        gevent.joinall([
-            gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
-            gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
-            gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
-            gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
-            gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
-        ])
+        num = len(event_urls)//5
+        for i in range(num):
+            gevent.joinall([
+                gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
+                gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
+                gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
+                gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
+                gevent.spawn(self.get_event_info(event_urls.pop() if event_urls else None)),
+            ])
 
     # parse the html,get the activity info
     def get_event_info(self,event_url):
@@ -102,18 +104,13 @@ class Douban():
                     f = open('error_url.txt', 'a')
                     f.write(event_url + "\r\n")
                     f.close()
-                global activities
-                activities.append(activity)
-                if len(activities) == 20:
-                    dbhelper = DBHelper(activities)
-                    dbhelper.store_data(activities)
-                    print("20条数据插入完毕")
-                    activities = []
+                dbhelper = DBHelper()
+                dbhelper.store_data(activity)
+                print(event_url,"数据插入完毕")
             else:
                 f = open('error_url.txt','a')
                 f.write(event_url+"\r\n")
                 f.close()
-            # return  None
 
 
 
